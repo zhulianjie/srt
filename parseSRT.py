@@ -13,7 +13,7 @@ import sys
 import srt
 
 srcSRT = sys.argv[1];
-desSRT = sys.argv[1] + ".cn";
+desSRT = srcSRT;
 
 print(srcSRT);
 print(desSRT);
@@ -35,11 +35,16 @@ with open(srcSRT, 'r', encoding='utf-8') as file:
 
 lines = list(srt.parse(content));
 
-limit = int(sys.argv[2])
-print("line limit " + str(limit))
-
+queryDic = {}
+inCacheCount = 0;
 for i in range(len(lines)):
     query = lines[i].content;
+
+    if query in queryDic:
+        lines[i].content = queryDic[query];
+        inCacheCount += 1;
+        print("INCache")
+        continue;
 
     # Generate salt and sign
     def make_md5(s, encoding='utf-8'):
@@ -61,10 +66,9 @@ for i in range(len(lines)):
 
     # Show response
     lines[i].content = result['trans_result'][0]['dst']
+    queryDic[query] = lines[i].content
 
-    if (i >= limit):
-        break;
-
-print("here");
+print("Total count : " + str(len(lines)))
+print("In Cache count " + str(inCacheCount));
 with open(desSRT, 'w', encoding='utf-8') as file:
     file.write(srt.compose(lines))
